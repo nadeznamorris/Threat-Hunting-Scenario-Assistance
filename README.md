@@ -192,3 +192,53 @@ DeviceProcessEvents
 <img width="1142" height="208" alt="image" src="https://github.com/user-attachments/assets/151d61af-934c-4f0e-b6b1-874f7ce92381" />
 
 ---
+
+### Flag 8 – Runtime Application Inventory
+
+**Objective :**  
+Detect enumeration of running applications and services to inform risk and opportunity.
+
+**Flag Value :**  
+`tasklist.exe`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any (
+    "tasklist","tasklist /v","Get-Process","Get-Service","sc query","wmic process list",
+    "Get-WmiObject -Class Win32_Process","Get-CimInstance -ClassName Win32_Process",
+    "Get-CimInstance -ClassName Win32_Service","powershell -Command Get-Process","powershell -Command Get-Service"
+)
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| order by TimeGenerated desc
+```
+
+<img width="760" height="210" alt="Flag 8" src="https://github.com/user-attachments/assets/3d23011a-7617-4f2e-a58a-68d6926469b5" />
+
+---
+
+### Flag 9 – Privilege Surface Check
+
+**Objective :**  
+Detect attempts to understand privileges available to the current actor.
+
+**Flag Value :**  
+`2025-10-09T12:52:14.3135459Z`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any ("whoami /all","whoami /groups")
+| project TimeGenerated, DeviceName, ProcessCommandLine, FileName
+| order by TimeGenerated asc
+```
+
+<img width="756" height="950" alt="image" src="https://github.com/user-attachments/assets/a97a03e8-39b3-499f-bd1f-276c461dcff9" />
+
+---
+
+
