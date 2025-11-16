@@ -77,3 +77,47 @@ DeviceFileEvents
 
 ---
 
+### Flag 3 – Quick Data Probe
+
+**Objective :**  
+Spot brief, opportunistic checks for readily available sensitive content.
+
+**Flag Value :**  
+`"powershell.exe" -NoProfile -Sta -Command "try { Get-Clipboard | Out-Null } catch { }"`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any ("Get-Clipboard", "GetClipboard", "clip.exe", " clip ", "pbpaste", "Get-Content | clip", "Set-Clipboard", "Get-ClipboardValue")
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, ProcessId, ReportId
+| order by TimeGenerated asc
+```
+
+<img width="800" height="150" alt="Flag 3" src="https://github.com/user-attachments/assets/3eee55f4-96bd-4d81-99cb-8aeb3277641a" />
+
+---
+
+### Flag 4 – Host Context Recon
+
+**Objective :**  
+Spot brief, opportunistic checks for readily available sensitive content.
+
+**Flag Value :**  
+`2025-10-09T12:51:44.3425653Z`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any ("qwinsta","quser","query session","query user","whoami","systeminfo","hostname","ipconfig","net user","net localgroup","wmic useraccount","wmic computersystem","Get-WmiObject","Get-CimInstance","Get-LocalUser")
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName, ProcessId
+| order by TimeGenerated desc
+```
+
+<img width="720" height="158" alt="Flag 4" src="https://github.com/user-attachments/assets/2d423cf8-dc73-4398-9030-8522ffd127a3" />
+
+---
+
