@@ -121,3 +121,74 @@ DeviceProcessEvents
 
 ---
 
+### Flag 5 – Storage Surface Mapping
+
+**Objective :**  
+Detect discovery of local or network storage locations that might hold interesting data.
+
+**Flag Value :**  
+`"cmd.exe" /c wmic logicaldisk get name,freespace,size`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any (
+    "Get-ChildItem", "Get-PSDrive", "Get-SmbShare", "Get-SmbShareAccess",
+    "Get-PSProvider", "dir ", "tree ", "net view", "net share", "net use",
+    "wmic logicaldisk", "fsutil", "mountvol", "robocopy", "dir /s", "Get-ChildItem -Recurse",
+    "Get-Volume","Get-Partition","Get-PSProvider -PSProvider FileSystem"
+)
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessCommandLine, ProcessId
+| order by TimeGenerated asc
+| extend rn = row_number()
+```
+
+<img width="1195" height="118" alt="Flag 5" src="https://github.com/user-attachments/assets/dac081ef-170f-4a46-b9b0-9034836e478b" />
+
+---
+
+### Flag 6 – Connectivity & Name Resolution Check
+
+**Objective :**  
+Identify checks that validate network reachability and name resolution.
+
+**Flag Value :**  
+`RuntimeBroker.exe`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any ("ping","nslookup","Resolve-DnsName","Test-NetConnection","tracert","curl","Invoke-WebRequest","Invoke-RestMethod","wget","GetHostEntry","netstat","query session","qwinsta")
+| project TimeGenerated, ChildFileName = FileName, ChildCommandLine = ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine, InitiatingProcessParentFileName
+| order by TimeGenerated asc
+```
+
+<img width="862" height="242" alt="image" src="https://github.com/user-attachments/assets/d1dc41d5-3aba-4ec8-8a45-cd6ece94fcc4" />
+
+---
+
+### Flag 7 – Interactive Session Discovery
+
+**Objective :**  
+Reveal attempts to detect interactive or active user sessions on the host.
+
+**Flag Value :**  
+`2533274790397065`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ProcessCommandLine has_any ("query session","qwinsta","quser","query user","whoami /all","whoami /groups")
+| project TimeGenerated, FileName, InitiatingProcessParentId, InitiatingProcessCommandLine, InitiatingProcessUniqueId
+| order by TimeGenerated asc
+```
+
+<img width="1142" height="208" alt="image" src="https://github.com/user-attachments/assets/151d61af-934c-4f0e-b6b1-874f7ce92381" />
+
+---
