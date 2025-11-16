@@ -284,4 +284,99 @@ DeviceFileEvents
 
 <img width="636" height="200" alt="Flag 11" src="https://github.com/user-attachments/assets/c47488d8-8551-4a4e-bccc-f13e703ef2d8" />
 
+---
 
+### Flag 12 – Outbound Transfer Attempt (Simulated)
+
+**Objective :**  
+Identify attempts to move data off-host or test upload capability.
+
+**Flag Value :**  
+`100.29.147.161`
+
+**KQL Query :**
+```
+DeviceNetworkEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where InitiatingProcessFileName in~ ("powershell.exe", "cmd.exe", "curl.exe", "wget.exe", "bitsadmin.exe")
+| project TimeGenerated, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteUrl, RemoteIP, Protocol, RemotePort
+| order by TimeGenerated asc
+```
+
+<img width="550" height="315" alt="Flag 12" src="https://github.com/user-attachments/assets/0a57bbea-bd07-4d1b-8393-d2ccfa991324" />
+
+---
+
+### Flag 13 – Scheduled Re-Execution Persistence
+
+**Objective :**  
+Detect creation of mechanisms that ensure the actor’s tooling runs again on reuse or sign-in.
+
+**Flag Value :**  
+`SupportToolUpdater`
+
+**KQL Query :**
+```
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where FileName =~ "schtasks.exe" or InitiatingProcessFileName =~ "schtasks.exe"
+| where ProcessCommandLine has_any ("create", " /create ", "/sc", "/tn")
+| project TimeGenerated, ProcessCommandLine, TaskName = extract(@"\/tn\s+([^\s]+)", 1, ProcessCommandLine)
+| order by TimeGenerated asc
+```
+
+<img width="650" height="117" alt="Flag 13" src="https://github.com/user-attachments/assets/c557618a-9617-4e38-a0f5-59500de6e568" />
+
+---
+
+### Flag 14 – Autorun Fallback Persistence
+
+**Objective :**  
+Spot lightweight autorun entries placed as backup persistence in user scope.
+
+**Flag Value :**  
+`RemoteAssistUpdater`
+
+**KQL Query :**
+```
+DeviceRegistryEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ActionType == "RegistryValueSet"
+| where RegistryValueData contains ".log"
+       or RegistryValueData contains ".txt"
+       or RegistryValueData contains ".ps1"
+       or RegistryValueData contains ".exe"
+| where RegistryKey contains @"\CurrentVersion\Run"
+| project TimeGenerated, RegistryKey, RegistryValueName, RegistryValueData
+| order by TimeGenerated asc
+```
+
+---
+
+### Flag 15 – Planted Narrative / Cover Artifact
+
+**Objective :**  
+Identify a narrative or explanatory artifact intended to justify the activity.
+
+**Flag Value :**  
+`SupportChat_log.lnk`
+
+**KQL Query :**
+```
+DeviceFileEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ActionType in~ ("FileCreated","FileModified","FileOpened","FileWrite","FileAccessed")
+| where InitiatingProcessFileName in~ ("notepad.exe","explorer.exe","regedit.exe","cmd.exe","powershell.exe","mmc.exe")
+| where FileName !startswith "__PSScriptPolicyTest"
+| extend Basename = iff(isnotempty(FileName), strcat(split(FileName, "\\")[-1]), tostring(FileName))
+| project TimeGenerated, InitiatingProcessFileName, ActionType, FileName, FolderPath, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+<img width="1517" height="251" alt="Flag 15" src="https://github.com/user-attachments/assets/f0d98286-dce5-44f0-a3e8-44e53c554680" />
+
+---
