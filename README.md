@@ -241,4 +241,47 @@ DeviceProcessEvents
 
 ---
 
+### Flag 10 – Proof-of-Access & Egress Validation
+
+**Objective :**  
+Find actions that both validate outbound reachability and attempt to capture host state for exfiltration value.
+
+**Flag Value :**  
+`www.msftconnecttest.com`
+
+**KQL Query :**
+```
+DeviceNetworkEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where InitiatingProcessFileName in~ ("powershell.exe", "cmd.exe", "curl.exe", "wget.exe", "bitsadmin.exe")
+| project TimeGenerated, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteUrl, RemoteIP, Protocol, RemotePort
+| order by TimeGenerated asc
+```
+
+<img width="756" height="180" alt="image" src="https://github.com/user-attachments/assets/593ed620-869c-43a1-b9c9-70d2cb663d2d" />
+
+---
+
+### Flag 11 – Bundling / Staging Artifacts
+
+**Objective :**  
+Detect consolidation of artifacts into a single location or package for transfer.
+
+**Flag Value :**  
+`C:\Users\Public\ReconArtifacts.zip`
+
+**KQL Query :**
+```
+DeviceFileEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-15))
+| where ActionType in ("FileCreated", "FileCopied", "FileModified")
+| where FileName has_any (".zip", ".txt", ".log", ".csv")
+| project TimeGenerated, DeviceName, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by TimeGenerated asc
+```
+
+<img width="636" height="200" alt="Flag 11" src="https://github.com/user-attachments/assets/c47488d8-8551-4a4e-bccc-f13e703ef2d8" />
+
 
