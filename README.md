@@ -340,13 +340,13 @@ The earliest anomalous activity was a PowerShell invocation using the `-Executio
 The creation of `DefenderTamperArtifact.lnk` suggests the actor either simulated or staged the appearance of Windows Defender tampering. This artifact functions as deliberate misdirection — designed to imply a security posture change and potentially confuse incident responders investigating Defender-related alerts.
 
 **Phase 3 — Rapid Discovery Sweep (12:51:44 – 12:52:14 UTC)**  
-Within an approximately 30-second window, the actor conducted a comprehensive but lightweight environment survey using native Windows tooling. Each check was brief and targeted:
-**Clipboard** — PowerShell `-NoProfile -Sta` silently queried clipboard contents at `12:51:44` UTC. This opportunistic check targets credentials, tokens, or sensitive text recently copied by the user.
-**Disk** — `wmic logicaldisk get name,freespace,size` enumerated local drives to identify data repositories and assess available staging space.
-**Network** — `RuntimeBroker.exe` was used for DNS and network connectivity checks, abusing a trusted Windows process to blend in with normal system behavior.
-**Sessions** — The actor checked for active interactive user sessions (ID: `2533274790397065`) to determine whether a real user was monitoring the machine.
-**Processes** — `tasklist.exe` catalogued all running processes, identifying security tools, monitoring software, and exploitation opportunities.
-**Privileges** — The actor confirmed available privileges at `12:52:14` UTC to determine the scope of actions possible without escalation.
+Within an approximately 30-second window, the actor conducted a comprehensive but lightweight environment survey using native Windows tooling. Each check was brief and targeted:  
+**Clipboard** — PowerShell `-NoProfile -Sta` silently queried clipboard contents at `12:51:44` UTC. This opportunistic check targets credentials, tokens, or sensitive text recently copied by the user.  
+**Disk** — `wmic logicaldisk get name,freespace,size` enumerated local drives to identify data repositories and assess available staging space.  
+**Network** — `RuntimeBroker.exe` was used for DNS and network connectivity checks, abusing a trusted Windows process to blend in with normal system behavior.  
+**Sessions** — The actor checked for active interactive user sessions (ID: `2533274790397065`) to determine whether a real user was monitoring the machine.  
+**Processes** — `tasklist.exe` catalogued all running processes, identifying security tools, monitoring software, and exploitation opportunities.  
+**Privileges** — The actor confirmed available privileges at `12:52:14` UTC to determine the scope of actions possible without escalation.  
 **Connectivity** — A request to `www.msftconnecttest.com` validated the exfiltration path using a legitimate Microsoft domain to blend with normal traffic.
 
 **Phase 4 — Collection & Staging**  
